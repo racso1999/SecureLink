@@ -1,1 +1,1 @@
-Secure banking link allowing claude to access popular banking APIs securely
+Secure banking link allowing claude to access popular banking APIs
