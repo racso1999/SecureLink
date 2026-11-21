@@ -1,38 +1,37 @@
-import requests
 import os
 from dotenv import load_dotenv
+from fastapi import FastAPI, responses
+import requests
 
-from mcp.server.mcpserver import MCPServer
-
-import json
-
-mcp = MCPServer("securelink")
-
+app = FastAPI()
 load_dotenv()
 
-BASE_URL = "https://api.starlingbank.com/api/v2"
+CLIENT_SECRET = os.environ["CLIENT_SECRET"] #load the client secret
+CLIENT_ID = os.environ["CLIENT_ID"] #load the client_id
 
-s = requests.Session()
-
-s.headers["Authorization"] = f"Bearer {os.environ['STARLING_API_KEY']}"
-
-@mcp.tool()
-def get_account_information():
-    account_information = s.get(f"{BASE_URL}/accounts").json()
-    return account_information
-
-@mcp.tool()
-def get_accountUid():
-    accountUid = s.get(f"{BASE_URL}/accounts").json()['accounts'][0]['accountUid']
-    return accountUid
-
-@mcp.tool()
-def get_balance():
-    accountUid = get_accountUid()
-    balance = s.get(f"{BASE_URL}/accounts/{accountUid}/balance").json()
-    return balance
+REDIRECT_URI = "http://localhost:8000/callback"
+auth_url = f"https://auth.truelayer-sandbox.com/?response_type=code&client_id={CLIENT_ID}&scope=info%20accounts%20balance%20transactions%20offline_access&redirect_uri={REDIRECT_URI}&providers=uk-cs-mock"
+@app.get("/", response_class=responses.HTMLResponse) #serve a button that sends user to the fetch the code
+def home():
+    return f""" <html>
+    <a href= {auth_url}> <button>"Click To Connect"</button></a>
+    </html>"""
 
 
+@app.get("/callback")
+def callback(code: str):
+    token = requests.post(url = "https://auth.truelayer-sandbox.com/connect/token", data =
+                          {
+                              "grant_type":"authorization_code",
+                              "client_id":CLIENT_ID,
+                              "client_secret":CLIENT_SECRET,
+                              "redirect_uri":REDIRECT_URI,
+                              "code":code
+                          }
+                          )
+    print(f"SECRET FUCKING TOKEN{token.json()}")
+    return token.json()
 
-if __name__=="__main__":
-    mcp.run(transport="streamable-http")
+
+
+
