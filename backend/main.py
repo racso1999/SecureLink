@@ -6,7 +6,6 @@ import json
 
 app = FastAPI()
 load_dotenv()
-
 CLIENT_SECRET = os.environ["CLIENT_SECRET"] #load the client secret
 CLIENT_ID = os.environ["CLIENT_ID"] #load the client_id
 
