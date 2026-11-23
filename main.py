@@ -10,9 +10,20 @@ load_dotenv()
 CLIENT_SECRET = os.environ["CLIENT_SECRET"] #load the client secret
 CLIENT_ID = os.environ["CLIENT_ID"] #load the client_id
 
+""" Authorisation flow:
+
+1. Hit the auth URL to get code
+2. Exchange code for authorization token
+3. Store token
+
+"""
+
 REDIRECT_URI = "http://localhost:8000/callback"
 auth_url = f"https://auth.truelayer-sandbox.com/?response_type=code&client_id={CLIENT_ID}&scope=info%20accounts%20balance%20transactions%20offline_access&redirect_uri={REDIRECT_URI}&providers=uk-cs-mock"
-@app.get("/", response_class=responses.HTMLResponse) #serve a button that sends user to the fetch the code
+
+
+# auth flow
+@app.get("/", response_class=responses.HTMLResponse) 
 def home():
     return f""" <html>
     <a href= {auth_url}> <button>"Click To Connect"</button></a>
@@ -34,6 +45,7 @@ def callback(code: str):
     return {"status": "connected"}
 BASE_URl = "https://api.truelayer-sandbox.com/data/v1"
 
+# get account information
 @app.get("/accounts", response_class=responses.HTMLResponse)
 def accounts():
     account_url = f"{BASE_URl}/accounts"
