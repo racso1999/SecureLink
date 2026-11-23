@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 from fastapi import FastAPI, responses
 import requests
+import json
 
 app = FastAPI()
 load_dotenv()
@@ -17,7 +18,7 @@ def home():
     <a href= {auth_url}> <button>"Click To Connect"</button></a>
     </html>"""
 
-
+TOKENS = []
 @app.get("/callback")
 def callback(code: str):
     token = requests.post(url = "https://auth.truelayer-sandbox.com/connect/token", data =
@@ -29,8 +30,26 @@ def callback(code: str):
                               "code":code
                           }
                           )
-    print(f"SECRET FUCKING TOKEN{token.json()}")
-    return token.json()
+    TOKENS.append(token.json()["access_token"])
+    return {"status": "connected"}
+BASE_URl = "https://api.truelayer-sandbox.com/data/v1"
+
+@app.get("/accounts", response_class=responses.HTMLResponse)
+def accounts():
+    account_url = f"{BASE_URl}/accounts"
+    access_token = TOKENS[0]
+    account_data = requests.get(url = account_url, headers = 
+                                {
+                                    "Authorization":f"Bearer {access_token}"
+                                })
+
+    raw_data = json.dumps(account_data.json(), indent = 2)
+    return f""" <html>
+    <h> 
+    {raw_data} </h> </html>"""
+
+    
+
 
 
 
